@@ -167,6 +167,10 @@
             // drop: function (e, data) {}, // .bind('fileuploaddrop', func);
             // Callback for dragover events of the dropZone collection:
             // dragover: function (e) {}, // .bind('fileuploaddragover', func);
+            // Callback for dragleave events of the dropZone collection:
+            // dragleave: function (e) {}, // .bind('fileuploaddragleave', func);
+            // Callback for dragenter events of the dropZone collection:
+            // dragenter: function (e) {}, // .bind('fileuploaddragenter', func);
 
             // The plugin options are used as settings object for the ajax calls.
             // The following are jQuery ajax settings required for the file uploads:
@@ -843,13 +847,39 @@
             e.preventDefault();
         },
 
+        _onDragEnter: function(e) {
+            var that = e.data.fileupload,
+                dataTransfer = e.dataTransfer = e.originalEvent.dataTransfer;
+            if (that._trigger('dragenter', e) === false) {
+                return false;
+            }
+            if (dataTransfer) {
+                dataTransfer.dropEffect = 'copy';
+            }
+            e.preventDefault();
+        },
+
+        _onDragLeave: function(e) {
+            var that = e.data.fileupload,
+                dataTransfer = e.dataTransfer = e.originalEvent.dataTransfer;
+            if (that._trigger('dragleave', e) === false) {
+                return false;
+            }
+            if (dataTransfer) {
+                dataTransfer.dropEffect = 'copy';
+            }
+            e.preventDefault();
+        },
+
         _initEventHandlers: function () {
             var ns = this.options.namespace;
             if (this._isXHRUpload(this.options)) {
                 this.options.dropZone
                     .bind('dragover.' + ns, {fileupload: this}, this._onDragOver)
                     .bind('drop.' + ns, {fileupload: this}, this._onDrop)
-                    .bind('paste.' + ns, {fileupload: this}, this._onPaste);
+                    .bind('paste.' + ns, {fileupload: this}, this._onPaste)
+                    .bind('dragleave.' + ns, {fileupload: this}, this._onDragLeave)
+                    .bind('dragenter.' + ns, {fileupload: this}, this._onDragEnter);
             }
             this.options.fileInput
                 .bind('change.' + ns, {fileupload: this}, this._onChange);
@@ -860,7 +890,9 @@
             this.options.dropZone
                 .unbind('dragover.' + ns, this._onDragOver)
                 .unbind('drop.' + ns, this._onDrop)
-                .unbind('paste.' + ns, this._onPaste);
+                .unbind('paste.' + ns, this._onPaste)
+                .unbind('dragleave.' + ns, this._onDragLeave)
+                .unbind('dragenter.' + ns, this._onDragEnter);
             this.options.fileInput
                 .unbind('change.' + ns, this._onChange);
         },
